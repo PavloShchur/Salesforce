@@ -77,35 +77,48 @@ public class ContactTriggerHelperClass {
 
         Map<Id, Decimal> prequalifiedAmountMap = new Map<Id, Decimal>();
         
-        for(AggregateResult r : [SELECT AccountId AcctId, SUM(Amount__c) Amount FROM Contact 
+        for(AggregateResult r : 
+            [SELECT AccountId AcctId, SUM(Amount__c) SumAmount 
+             FROM Contact 
              WHERE AccountId IN :accountIds 
-             GROUP BY AccountId]) {
+             GROUP BY AccountId]
+        ){
             
-                Account account = new Account();
-                 
-                account.Id = (Id) r.get('AcctId');
-                account.SumOfPrequalifiedAmount__c = (Decimal) r.get('Amount');        		
-               
-               prequalifiedAmountMap.put(account.Id, account.SumOfPrequalifiedAmount__c);           
+            Id accountId = (Id) r.get('AcctId');
+            Decimal sumAmount = (Decimal) r.get('SumAmount');		               
+
+            prequalifiedAmountMap.put(
+                accountId, 
+                sumAmount
+            );
         }
-      
-        System.debug(Limits.getQueries() +', '+ Limits.getLimitQueries());
+
+        //process those accounts with last contact removed
+        for (Id accountId :accountIds) {
+            if ( ! prequalifiedAmountMap.containsKey( accountId ) ){
+
+                prequalifiedAmountMap.put(
+                    accountId, 
+                    0
+                );
+
+            }
+        }        
+    
         
         return prequalifiedAmountMap;
         
     }
 
 
-    //WRITE UNIT TEST WHEN LAST CONTACT ON ACCOOUNT IS DELETED
 
-    public  Map<Id, Decimal> getNumberOfContacts (Set<Id> accountIds) {
-        System.debug('getNumberOfContacts()');
+    public  Map<Id, Decimal> getNumberOfContacts (Set<Id> accountIds) {       
         
         if ( accountIds.isEmpty() ){
             return new Map<Id, Decimal>();
         }
         
-        Map<Id, Decimal> numberOfContactsMap = new Map<Id, Decimal>();
+        Map<Id, Decimal> accountId2ContactCountMap = new Map<Id, Decimal>();
                        
         for(AggregateResult r : 
             
@@ -114,20 +127,33 @@ public class ContactTriggerHelperClass {
              WHERE AccountId IN :accountIds 
              GROUP BY AccountId]
             
-         ){
+        ){
+  
+            Id accountId = (Id) r.get('AcctId');
+            Decimal contactCountNumber = (Integer) r.get('ContactCount');
 
-             Account account = new Account(); 
-                          
-             account.Id = (Id) r.get('AcctId');
-             account.NumberOfContacts__c = (Integer) r.get('ContactCount');
 
-             
-             numberOfContactsMap.put(account.Id, account.NumberOfContacts__c);
-             
-         }
-        		
-        System.debug('numberOfContactsMap = ' + numberOfContactsMap);			        
-        return numberOfContactsMap;
+            accountId2ContactCountMap.put(
+                accountId, 
+                contactCountNumber
+            );
+        }
+
+
+        //process those accounts with last contact removed
+        for (Id accountId :accountIds) {
+            if ( ! accountId2ContactCountMap.containsKey( accountId ) ){
+
+                accountId2ContactCountMap.put(
+                    accountId, 
+                    0
+                );
+
+            }
+        }
+
+
+        return accountId2ContactCountMap;
         
     }
         
@@ -138,32 +164,23 @@ public class ContactTriggerHelperClass {
             return;
         }
 
+        Map<Id, Decimal> prequalifiedAmountMap = getSumOfPrequalifiedAmount(accountIds);
+        Map<Id, Decimal> numberOfContactsMap = getNumberOfContacts(accountIds);        
+
         
         List<Account> updateAccounts = new List<Account>();
-            
-        Map<Id, Decimal> prequalifiedAmountMap = getSumOfPrequalifiedAmount(accountIds);
-        Map<Id, Decimal> numberOfContactsMap = getNumberOfContacts(accountIds);
         
-        if(!prequalifiedAmountMap.isEmpty() 
-          ||
-           !numberOfContactsMap.isEmpty()
-          ) {
-    
+        for(Id accountId : accountIds){
+            
+            updateAccounts.add(
+                new Account(
+                    Id = accountId,
+                    NumberOfContacts__c = numberOfContactsMap.get( accountId ),
+                    SumOfPrequalifiedAmount__c = prequalifiedAmountMap.get( accountId )
+                )
+            ); 
 
-            for(Id accountId : accountIds){
-                
-                Account account = new Account();
-                
-                    account.Id = accountId;
-                
-                    account.NumberOfContacts__c = numberOfContactsMap.get( account.Id );
-                
-                    account.SumOfPrequalifiedAmount__c =  prequalifiedAmountMap.get( account.Id );  
-                
-                updateAccounts.add(account); 
-    
-            }
-          }
+        }
 
         update updateAccounts; 
      

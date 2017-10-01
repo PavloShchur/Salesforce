@@ -8,7 +8,7 @@ private class ContactTriggerMore5Cont_CompletedTest {
         
         List<Contact> contacts = new List<Contact>{};
             
-            for(Integer i = 0; i < 100; i++){
+            for(Integer i = 0; i < 200; i++){
                 Contact c = new Contact(LastName = 'Test Account ' + i, Birthdate = Date.ValueOf('1968-09-21'), AccountId = testAccount.Id);
                 contacts.add(c);
             }
@@ -45,7 +45,7 @@ private class ContactTriggerMore5Cont_CompletedTest {
         
         List<Contact> contacts = new List<Contact>{};
             
-            for(Integer i = 0; i < 100; i++){
+            for(Integer i = 0; i < 200; i++){
                 Contact c = new Contact(LastName = 'Test Account ' + i, Birthdate = Date.ValueOf('2008-09-21'), AccountId = testAccount.Id);
                 contacts.add(c);
             }

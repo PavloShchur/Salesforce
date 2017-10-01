@@ -25,10 +25,10 @@ private class ContactTriggerSumOfContactsTest {
         
         Account testAccount = [SELECT Name FROM Account WHERE Name = 'TestSetup'];
         
-            
-                System.assertEquals(12475000, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
-                                              FROM Account 
-                                              WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
+        
+        System.assertEquals(12475000, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
+                                       FROM Account 
+                                       WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
         
         
         List<Contact> contactsList = [SELECT Id FROM CONTACT WHERE AccountId = :testAccount.Id];
@@ -37,39 +37,43 @@ private class ContactTriggerSumOfContactsTest {
             c.Amount__c = 50;
         }
         
-        	update contactsList;
+        Test.startTest();
         
-                System.assertEquals(25000, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
-                                              FROM Account 
-                                              WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);   
+        update contactsList;
+        
+        System.assertEquals(25000, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
+                                    FROM Account 
+                                    WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);   
         
         for(Contact c :contactsList) {
             c.Amount__c = null;
         }
         
-        	update contactsList;
+        update contactsList;
         
-                System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
-                                              FROM Account 
-                                              WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
+        System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
+                                   FROM Account 
+                                   WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
         
         for(Contact c :contactsList) {
             c.Amount__c = null;
             c.AccountId = null;
         }
         
-        	update contactsList;
+        update contactsList;
         
-                System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
-                                              FROM Account 
-                                              WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);      
+        System.assertEquals(0, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
+                                FROM Account 
+                                WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);      
         
-        	delete contactsList;
-            
-                System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
-                                              FROM Account 
-                                              WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
-            
+        delete contactsList;
+        
+        System.assertEquals(0, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
+                                FROM Account 
+                                WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
+        
+        Test.stopTest();
+        
     }
     
     
@@ -77,15 +81,12 @@ private class ContactTriggerSumOfContactsTest {
         
         Account testAccount = [SELECT Name FROM Account WHERE Name = 'TestSetup'];
         
-        List<Account> insertedAccounts = [SELECT NumberOfContacts__c  
-                                          FROM Account 
-                                          WHERE Id = :testAccount.Id];
         
         List<Contact> contacts = [SELECT Id, LastName FROM Contact WHERE AccountId =:testAccount.Id];
         
-            for(Account account: insertedAccounts){
-                System.assertEquals(500, account.NumberOfContacts__c);
-            }
+        System.assertEquals(500, [SELECT NumberOfContacts__c  
+                                  FROM Account 
+                                  WHERE Id = :testAccount.Id].NumberOfContacts__c);
         
         
         List<Contact> contactsToAdd = new List<Contact>{};
@@ -98,7 +99,9 @@ private class ContactTriggerSumOfContactsTest {
                 ));
             }
         
-        	insert contactsToAdd;
+        Test.startTest();
+        
+        insert contactsToAdd;
         
         for(Contact c :contactsToAdd) {
             contacts.add(c);
@@ -107,24 +110,26 @@ private class ContactTriggerSumOfContactsTest {
         update contacts;
         
         
-                System.assertEquals(1000, [SELECT NumberOfContacts__c  
-                                                            FROM Account 
-                                                            WHERE Id = :testAccount.Id].NumberOfContacts__c);
+        System.assertEquals(1000, [SELECT NumberOfContacts__c  
+                                   FROM Account 
+                                   WHERE Id = :testAccount.Id].NumberOfContacts__c);
         
-        	Savepoint sp = Database.setSavepoint();
+        Savepoint sp = Database.setSavepoint();
         
         Database.delete([SELECT Id FROM Contact WHERE LastName = 'Test Contact A'], true);
-
-
-                 System.assertEquals(500, [SELECT NumberOfContacts__c  
-                                                            FROM Account 
-                                                            WHERE Id = :testAccount.Id].NumberOfContacts__c);
         
-        	Database.rollback(sp);
+        
+        System.assertEquals(500, [SELECT NumberOfContacts__c  
+                                  FROM Account 
+                                  WHERE Id = :testAccount.Id].NumberOfContacts__c);
+        
+        Database.rollback(sp);
         
         delete contacts;
         
-        System.assertEquals(null, [SELECT NumberOfContacts__c  
+        Test.stopTest();
+        
+        System.assertEquals(0, [SELECT NumberOfContacts__c  
                                 FROM Account 
                                 WHERE Id = :testAccount.Id].NumberOfContacts__c);
         
@@ -134,42 +139,39 @@ private class ContactTriggerSumOfContactsTest {
         
         Account testAccount = [SELECT Name FROM Account WHERE Name = 'TestSetup'];
         
-        List<Contact> contacts = [SELECT LastName FROM Contact WHERE AccountId =:testAccount.Id];
-
+        List<Contact> contactsToUpdate = [SELECT LastName FROM Contact WHERE AccountId =:testAccount.Id];
         
-        System.assertEquals(500, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
-                                          FROM Account 
-                                          WHERE Id = :testAccount.Id].NumberOfContacts__c);
+        for(Contact c: contactsToUpdate) {
+            c.Amount__c = 50;
+            c.LastName = 'TestName';
+        }
         
-       List<Contact> contactsToUpdate = [SELECT LastName FROM Contact WHERE ID In :contacts];
-            
-            for(Contact c: contactsToUpdate) {
-                    c.Amount__c = 50;
-                    c.LastName = 'TestName';
-                }
+        Test.startTest();
         
-        	update contactsToUpdate;
+        update contactsToUpdate;
+        
+        Test.stopTest();
         
         List<Account> insertedAccountsAfterUpdateContact = [SELECT NumberOfContacts__c, SumOfPrequalifiedAmount__c  
                                                             FROM Account 
                                                             WHERE Id = :testAccount.Id];
         
-            for(Account account: insertedAccountsAfterUpdateContact){
-                System.assertEquals(500, account.NumberOfContacts__c);
-                System.assertEquals(25000, account.SumOfPrequalifiedAmount__c);
-            }
+        for(Account account: insertedAccountsAfterUpdateContact){
+            System.assertEquals(500, account.NumberOfContacts__c);
+            System.assertEquals(25000, account.SumOfPrequalifiedAmount__c);
+        }
         
     }
     
-    static testmethod void contactWithEmptyAmountField() {
+    static testmethod void contactWithEmptyAmountFieldCreateUpdateDeleteUndelete() {
         
         Account testAccount = new Account (Name = 'Test');
         
-            try{
-                insert testAccount;  
-            } catch(DMLException e) {
-                System.debug('An unexpected error occurred ' + e.getMessage());
-            }
+        try{
+            insert testAccount;  
+        } catch(DMLException e) {
+            System.debug('An unexpected error occurred ' + e.getMessage());
+        }
         
         List<Contact> contacts = new List<Contact>{};
             
@@ -182,16 +184,40 @@ private class ContactTriggerSumOfContactsTest {
         
         insert contacts; 
         
-        Test.stopTest();
-        
-        
         System.assertEquals(200, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
                                   FROM Account 
                                   WHERE Id = :testAccount.Id].NumberOfContacts__c);
         System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c, NumberOfContacts__c  
                                    FROM Account 
                                    WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c);
-                        
+        
+        List<Contact> contactsList = [SELECT LastName FROM Contact WHERE ID In :contacts];
+        
+        for(Contact c: contactsList) {
+            c.Amount__c = null;
+            c.LastName = 'TestName';
+        }
+        
+        update contactsList;
+        
+        System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c  
+                                   FROM Account 
+                                   WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c); 
+        
+        delete contactsList;
+        
+        System.assertEquals(0, [SELECT SumOfPrequalifiedAmount__c  
+                                FROM Account 
+                                WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c); 
+        
+        undelete contactsList;
+        
+        Test.stopTest();
+        
+        System.assertEquals(null, [SELECT SumOfPrequalifiedAmount__c  
+                                   FROM Account 
+                                   WHERE Id = :testAccount.Id].SumOfPrequalifiedAmount__c); 
+        
     }
     
 }
