@@ -8,7 +8,9 @@ trigger SyncUpadateUserContactTrigger on User (after insert, after update) {
                 
                 if(Trigger.isInsert || (Trigger.isUpdate && Trigger.oldMap.get(user.ID).FirstName != user.FirstName)
                    || (Trigger.isUpdate && Trigger.oldMap.get(user.ID).LastName != user.LastName)){
+                       
                        userList = [SELECT Id, FirstName, LastName FROM User WHERE Id = :user.Id];
+                       
                        contactList = [SELECT FirstName, LastName
                                       FROM Contact
                                       WHERE Id = :user.Contact_id__c];

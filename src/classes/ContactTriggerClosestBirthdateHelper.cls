@@ -106,7 +106,6 @@ public class ContactTriggerClosestBirthdateHelper {
         }
 
         Map<Id, Id> contactWithClosestBirthDay = findContactWithClosestBirthDay(accountIds);
-            System.debug('AAAAA = ' + contactWithClosestBirthDay);
 
         List<Account> updateAccounts = new List<Account>();
 

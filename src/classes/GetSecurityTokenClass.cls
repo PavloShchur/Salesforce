@@ -18,6 +18,7 @@ public virtual class GetSecurityTokenClass {
                             '&client_secret=' + CLIENT_SECRET_TOKEN + 
                             '&username=' + USER_NAME_TOKEN +
                             '&password=' + USER_PASSWORD_TOKEN);
+            
             request.setEndpoint(GET_SECURITY_TOKEN_URL);
             HttpResponse response = http.send(request);
             

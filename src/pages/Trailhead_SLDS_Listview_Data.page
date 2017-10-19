@@ -1,0 +1,30 @@
+<apex:page >
+    
+    <table class="slds-table slds-table--bordered slds-table--cell-buffer slds-no-row--hover">
+        
+        <thead>
+        
+        	<tr class="slds-text-heading--label">
+            	<th scope="col">Account ID</th>
+                <th scope="col">Account Name</th>
+            </tr>
+            
+        </thead>
+        
+        <tbody>
+        
+        	<tr>
+            	<th scope="row">123</th>
+                <td>Account 2</td>
+            </tr>
+            <tr>
+            	<th scope="row">456</th>
+                <td>Account 2</td>
+            </tr>
+        
+        </tbody>
+        
+    </table>
+    
+    
+</apex:page>

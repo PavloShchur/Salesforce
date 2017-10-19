@@ -1,23 +1,59 @@
-public class CaseTriggerStatusCompletedHelper {
+public class CaseTriggerStatusCompletedHelper {  
     
-    Set<Id> contactIdsSet = new Set<Id>();
-    List<Contact> contactListToUpdate = new List<Contact>();
-    
-    public void saveContactIds(Id contactId) {
-        contactIdsSet.add(contactId);
+    public Set<Id> getContactIds(Map<Id, Case> oldMap, List<Case> newList) {
+        
+        Set<Id> contactIds = new Set<Id>();
+        
+        if (oldMap != null && newList != null) {
+            
+            for (Case caseNew : newList) {
+                
+                Case caseOld = oldMap.get(caseNew.Id);
+                
+                if (caseNew.Status != caseOld.Status) {
+                    contactIds.add(caseNew.ContactId);
+                }
+                
+                if (caseNew.ContactId != caseOld.ContactId) {
+                    
+                    contactIds.add(caseNew.ContactId);
+                    contactIds.add(caseOld.ContactId);
+                    
+                }
+                
+            }
+            
+        } else if (newList == null) {
+            
+            for (Case caseNew : oldMap.values()) {
+                contactIds.add(caseNew.ContactId);
+            }
+            
+        } else if (oldMap == null) {
+            
+            for (Case caseNew : newList) {
+                contactIds.add(caseNew.ContactId);
+            }
+        }
+        
+        contactIds.remove(null);
+        
+        return contactIds;
+        
     }
     
-    public void verifyContactStatus() {
+    public void verifyContactStatus(Set<Id> contactIdsSet) {
         
-        List<Contact> tempList = new List<Contact>();
-        List<User> userList = [SELECT Id, Name from User];
+        List<Contact> contactListToUpdate = new List<Contact>();
+        
         List<Contact> contactList = new List<Contact>();
+               
         List<Case> caseList = new List<Case>();
         
-        for(Contact contact: [SELECT id, Name, Age__c, Adult__c,
-                              (SELECT id, Status FROM Cases)
+        for(Contact contact: [SELECT Age__c, Adult__c,
+                              	(SELECT Status FROM Cases)
                               FROM Contact WHERE id in:contactIdsSet]) {
-                                  
+                                                                    
                                   contactList.add(contact);                           
                                   caseList = contact.Cases;
                                   
@@ -25,44 +61,21 @@ public class CaseTriggerStatusCompletedHelper {
         
         if(caseList.size() > 0) {
             
-            List<Contact> tempContactList = [SELECT id, Name, Age__c, Adult__c
-                                             FROM Contact 
-                                             WHERE Id IN :contactList];
-            
-            for(Integer i = 0; i < caseList.size(); i++) {
-                
-                if(caseList.get(i).Status == 'Completed') {
-                    
-                    for(Integer j = 0; j < userList.size(); j++) {
-                        
-                        JobSharing.manualShare(tempContactList, userList.get(j).Id, 'Read');
-                        
-                    }
-                    
-                } 
-                
-                if(caseList.size() > 3) {
-                    
-                    for(Integer j = 0; j < userList.size(); j++) {
-                        JobSharing.manualShare(tempContactList, userList.get(j).Id, 'Edit');
-                    }
-                }
-                
-            }
-            
             for(Contact contact : contactList) {
+                
+                Integer counter = 0;
                 
                 for(Integer j = 0; j < caseList.size(); j++) {
                     
-                    if(caseList.get(j).Status == 'Completed' && contact.Age__c > 18) {
-                        
-                        tempList.add(contact);
+                    if(caseList.get(j).Status == 'Completed' && contact.Age__c >= 18) {
+                                                
+                        counter++;
                         
                     } 
                     
                 }
                 
-                if(tempList.size() > 0) {
+                if(counter > 0) {
                     
                     contact.Adult__c = true;
                     
@@ -71,7 +84,7 @@ public class CaseTriggerStatusCompletedHelper {
                     contact.Adult__c = false;
                     
                 }
-                
+                                
                 contactListToUpdate.add(contact);
                 
             }
@@ -86,15 +99,11 @@ public class CaseTriggerStatusCompletedHelper {
             }
             
         }
-        
-        try{
-            System.debug('contactListToUpdate 91 = ' + contactListToUpdate);
+
             update contactListToUpdate;
-            System.debug('contactListToUpdate 93 = ' + contactListToUpdate);
-        } catch(DMLException e) {
-            System.debug('An unexpected error has occurred ' + e.getMessage());
-        }
+            
         
     }
+    
     
 }

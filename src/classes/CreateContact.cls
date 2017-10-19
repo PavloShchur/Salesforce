@@ -38,20 +38,19 @@ public class CreateContact implements HttpRequestResponseInterface {
     public HttpResponse performRequest (HttpRequest__c httpRequest) {
             
             System.debug('performRequest httpRequest = ' + httpRequest);
+        
             Http http = new Http();
             HttpRequest request = new HttpRequest();
             HttpResponse response = new HttpResponse();
             
-    /*        response = GetSecurityTokenClass.getSecurityToken();
+            response = GetSecurityTokenClass.getSecurityToken();
             
             AccessTokenDTO tokenDTO = 
                 (AccessTokenDTO) JSON.deserialize(response.getBody(), AccessTokenDTO.class );
             
                 request.setHeader('Authorization',
                                   'Bearer ' + tokenDTO.access_token);
-    */
-                request.setHeader('Authorization',
-                                  'Bearer ' + 'auf253100vbnc45I25vY5eRCPSPnQxXCmNgrhbW');
+    
                 request.setHeader('Content-Type',
                                   'application/json');
                 request.setMethod(httpRequest.method__c);
@@ -60,6 +59,7 @@ public class CreateContact implements HttpRequestResponseInterface {
                 System.debug('performRequest');
             
             response = http.send(request);
+        
             System.debug('performRequest response = ' + response);
         
         return response;  
